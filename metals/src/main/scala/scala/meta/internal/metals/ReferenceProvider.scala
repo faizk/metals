@@ -54,6 +54,8 @@ final class ReferenceProvider(
           referencedPackages.put(o.symbol)
         }
         bloom.put(o.symbol)
+        val test = bloom.mightContain(o.symbol)
+        scribe.debug(s"@@@ INDEXED: $o -> $file; says: [$test]")
       }
       d.synthetics.foreach { synthetic =>
         Synthetics.foreachSymbol(synthetic) { sym =>
@@ -196,9 +198,20 @@ final class ReferenceProvider(
         includeSynthetics
       )
     } else {
+      def mightContain(
+          path: Path,
+          bloom: BloomFilter[CharSequence]
+      ): Boolean = {
+        val well = bloom.mightContain(occ.symbol) ||
+          (occ.symbol.endsWith("#") && bloom.mightContain(
+            occ.symbol.stripSuffix("#") + "."
+          ))
+        scribe.debug(s"@@@ MIGHTCONTAIN: ${occ.symbol} -> $path; well? [$well]")
+        well
+      }
       val results: Iterator[Location] = for {
         (path, bloom) <- index.iterator
-        if bloom.mightContain(occ.symbol)
+        if mightContain(path, bloom)
         scalaPath <- SemanticdbClasspath
           .toScala(workspace, AbsolutePath(path))
           .iterator
