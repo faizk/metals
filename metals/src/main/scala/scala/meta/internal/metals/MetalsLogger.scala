@@ -46,7 +46,7 @@ object MetalsLogger {
       .withHandler(
         writer = newFileWriter(logfile),
         formatter = defaultFormat,
-        minimumLevel = Some(Level.Info),
+        minimumLevel = Some(Level.Debug),
         modifiers = List(MetalsFilter)
       )
       .withHandler(
